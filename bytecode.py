@@ -93,6 +93,37 @@ def tokenize(string):
             string = string[1:]
 
 
+class AST:
+    def __init__(self, value):
+        self.value = value
+
+    def __repr__(self):
+        return "{}({})".format(self.__class__.__name__, repr(self.value))
+
+    def __str__(self):
+        return str(self.value.value)
+
+
+class NumAST (AST): pass
+class IdentAST (AST): pass
+
+
+class BinOpAST (AST):
+    def __init__(self, lhs, op, rhs):
+        self.lhs, self.op, self.rhs = lhs, op, rhs
+
+    def __repr__(self):
+        return "{}({}, {}, {})".format(
+            self.__class__.__name__,
+            self.lhs,
+            self.op,
+            self.rhs,
+        )
+
+    def __str__(self):
+        return "({} {} {})".format(self.lhs, self.op.value, self.rhs,)
+
+
 def parse(tokens):
     pass
 
@@ -103,7 +134,3 @@ def compile(ast):
 
 def interp(bytecode):
     pass
-
-
-print(list(tokenize("(a^2 + b^2)^(1/2)")))
-print(list(tokenize("10 - 9 * 3")))

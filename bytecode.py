@@ -143,29 +143,42 @@ precedence = {
     '-': 1,
 }
 
+associativity = {
+    '^': 'R',
+    '*': 'L',
+    '/': 'L',
+    '+': 'L',
+    '-': 'L',
+}
 
-def parse_binop_rhs(tokens, lhs, op):
-    expr = parse_primary(tokens)
-    if not tokens.peek() or not tokens.peek().isa(Op):
-        return expr
-    next_op = tokens.peek()
-    prec = precedence[op.value]
-    next_prec = precedence[next_op.value]
-    if next_prec > prec:
-        rhs = parse_binop_rhs(tokens.skip(), expr, next_op)
-        return BinOpAST(expr, next_op, rhs)
-    return expr
+
+def parse_binop_rhs(tokens, lhs, prec):
+    look = tokens.peek()
+    while (look and look.isa(Op) and precedence[look.value] >= prec):
+        op = tokens.next()
+        rhs = parse_primary(tokens)
+        op_prec = precedence[op.value]
+        look = tokens.peek()
+        while (look and look.isa(Op) and
+               (precedence[look.value] > op_prec or
+                associativity[look.value] == 'R' and
+                precedence[look.value] >= op_prec)):
+            op_prec = precedence[look.value]
+            rhs = parse_binop_rhs(tokens, rhs, op_prec)
+            look = tokens.peek()
+        lhs = BinOpAST(lhs, op, rhs)
+    return lhs
 
 
 def parse_expr(tokens):
     expr = parse_primary(tokens)
-    while tokens.peek() and tokens.peek().isa(Op):
-        op = tokens.next()
-        rhs = parse_binop_rhs(tokens, expr, op)
-        expr = BinOpAST(expr, op, rhs)
-    if tokens.peek() == ')':
-        tokens.next()
+    if not tokens.peek():
         return expr
+
+    if tokens.peek().isa(Op):
+        expr = parse_binop_rhs(tokens, expr, 0)
+    if tokens.peek() == ')':
+        tokens.skip()
     return expr
 
 

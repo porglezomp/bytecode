@@ -1,0 +1,2 @@
+def interp(bytecode):
+    pass

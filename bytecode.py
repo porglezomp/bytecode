@@ -1,3 +1,6 @@
+import re
+
+
 class Token:
     def __init__(self, value):
         self.value = value
@@ -21,8 +24,28 @@ class Char (Token): pass
 class Op (Token): pass
 
 
+handlers = [
+    (Op, re.compile('[-+/*^]')),
+    (Ident, re.compile('[a-zA-Z_][a-zA-Z0-9_]*')),
+    (Num, re.compile('[0-9]+')),
+]
+
+
 def tokenize(string):
-    pass
+    while True:
+        string = string.lstrip()
+        for handler, pattern in handlers:
+            match = pattern.match(string)
+            if match:
+                yield handler(match.group(0))
+                string = string[match.end():]
+                break
+        else:
+            if not string:
+                return
+
+            yield Char(string[0])
+            string = string[1:]
 
 
 def parse(tokens):
@@ -35,3 +58,7 @@ def compile(ast):
 
 def interp(bytecode):
     pass
+
+
+print(list(tokenize("(a^2 + b^2)^(1/2)")))
+print(list(tokenize("10 - 9 * 3")))

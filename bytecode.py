@@ -105,8 +105,14 @@ class AST:
         return str(self.value.value)
 
 
-class NumAST (AST): pass
-class IdentAST (AST): pass
+class NumAST (AST):
+    def codegen(self):
+        return [PushNum(int(self.value.value))]
+
+
+class IdentAST (AST):
+    def codegen(self):
+        return [LoadLocal(self.value.value)]
 
 
 class BinOpAST (AST):
@@ -123,6 +129,12 @@ class BinOpAST (AST):
 
     def __str__(self):
         return "({} {} {})".format(self.lhs, self.op.value, self.rhs,)
+
+    def codegen(self):
+        code = self.lhs.codegen()
+        code.extend(self.rhs.codegen())
+        code.append(MathOp(self.op.value))
+        return code
 
 
 def parse_primary(tokens):
@@ -191,7 +203,8 @@ class MathOp (Code): pass
 
 
 def compile(ast):
-    pass
+    code = ast.codegen()
+    return code
 
 
 def interp(bytecode):
@@ -207,7 +220,8 @@ tests = [
 print('-'*32)
 for test in tests:
     tokens = tokenize(test)
-    expr = parse_expr(tokens)
-    print(test)
-    print(expr)
+    ast = parse_expr(tokens)
+    stack = compile(ast)
+    for item in stack:
+        print(item)
     print('-'*32)

@@ -135,21 +135,15 @@ def parse_primary(tokens):
     return tokens.next()
 
 
-precedence = {
-    '^': 3,
-    '*': 2,
-    '/': 2,
-    '+': 1,
-    '-': 1,
+operator_table = {
+    '^': (3, 'R'),
+    '*': (2, 'L'),
+    '/': (2, 'L'),
+    '+': (1, 'L'),
+    '-': (1, 'L'),
 }
-
-associativity = {
-    '^': 'R',
-    '*': 'L',
-    '/': 'L',
-    '+': 'L',
-    '-': 'L',
-}
+precedence = {k: v for k, (v, _) in operator_table.iteritems()}
+associativity = {k: v for k, (_, v) in operator_table.iteritems()}
 
 
 def parse_binop_rhs(tokens, lhs, prec):

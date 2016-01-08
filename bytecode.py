@@ -1,3 +1,4 @@
+from __future__ import print_function
 import re
 
 
@@ -124,8 +125,48 @@ class BinOpAST (AST):
         return "({} {} {})".format(self.lhs, self.op.value, self.rhs,)
 
 
-def parse(tokens):
-    pass
+def parse_primary(tokens):
+    if tokens.peek() == '(':
+        return parse_expr(tokens.skip())
+    elif tokens.peek().isa(Num):
+        return NumAST(tokens.next())
+    elif tokens.peek().isa(Ident):
+        return IdentAST(tokens.next())
+    return tokens.next()
+
+
+precedence = {
+    '^': 3,
+    '*': 2,
+    '/': 2,
+    '+': 1,
+    '-': 1,
+}
+
+
+def parse_binop_rhs(tokens, lhs, op):
+    expr = parse_primary(tokens)
+    if not tokens.peek() or not tokens.peek().isa(Op):
+        return expr
+    next_op = tokens.peek()
+    prec = precedence[op.value]
+    next_prec = precedence[next_op.value]
+    if next_prec > prec:
+        rhs = parse_binop_rhs(tokens.skip(), expr, next_op)
+        return BinOpAST(expr, next_op, rhs)
+    return expr
+
+
+def parse_expr(tokens):
+    expr = parse_primary(tokens)
+    while tokens.peek() and tokens.peek().isa(Op):
+        op = tokens.next()
+        rhs = parse_binop_rhs(tokens, expr, op)
+        expr = BinOpAST(expr, op, rhs)
+    if tokens.peek() == ')':
+        tokens.next()
+        return expr
+    return expr
 
 
 def compile(ast):
@@ -134,3 +175,18 @@ def compile(ast):
 
 def interp(bytecode):
     pass
+
+
+tests = [
+    "(a^2 + b^2)^(1/2)",
+    "a^b^c^d",
+    "a - b - c - d",
+    "a + b * c - d",
+]
+print('-'*32)
+for test in tests:
+    tokens = tokenize(test)
+    expr = parse_expr(tokens)
+    print(test)
+    print(expr)
+    print('-'*32)

@@ -1,7 +1,7 @@
 from __future__ import print_function
 
 from lexer import tokenize
-from parser import parse
+from bcparser import parse
 from codegen import codegen
 
 

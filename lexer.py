@@ -19,8 +19,11 @@ class Token:
         return isinstance(self, ty)
 
 
+class Num (Token):
+    def __init__(self, value):
+        self.value = float(value)
+
 class Ident (Token): pass
-class Num (Token): pass
 class Char (Token): pass
 class Op (Token): pass
 
@@ -28,7 +31,7 @@ class Op (Token): pass
 handlers = [
     (Op, re.compile('[-+/*^]')),
     (Ident, re.compile('[a-zA-Z_][a-zA-Z0-9_]*')),
-    (Num, re.compile('[0-9]+')),
+    (Num, re.compile('[0-9]+\.?[0-9]*')),
 ]
 
 

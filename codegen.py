@@ -13,5 +13,9 @@ class MathOp (Code): pass
 
 
 def codegen(ast):
-    code = ast.codegen()
+    code = []
+    env = [0, {}]
+    for line in ast:
+        line.label(env)
+        code.extend(line.codegen())
     return code

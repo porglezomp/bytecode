@@ -1,71 +1,14 @@
-import codegen
 from lexer import Num, Ident, Op
-
-
-class AST:
-    def __init__(self, value):
-        self.value = value
-
-    def __repr__(self):
-        return "{}({})".format(self.__class__.__name__, repr(self.value))
-
-    def __str__(self):
-        return str(self.value.value)
-
-
-class NumAST (AST):
-    def codegen(self):
-        return [codegen.PushNum(int(self.value.value))]
-
-
-class IdentAST (AST):
-    def codegen(self):
-        return [codegen.LoadLocal(self.value.value)]
-
-
-class BinOpAST (AST):
-    def __init__(self, lhs, op, rhs):
-        self.lhs, self.op, self.rhs = lhs, op, rhs
-
-    def __repr__(self):
-        return "{}({}, {}, {})".format(
-            self.__class__.__name__,
-            self.lhs,
-            self.op,
-            self.rhs,
-        )
-
-    def __str__(self):
-        return "({} {} {})".format(self.lhs, self.op.value, self.rhs,)
-
-    def codegen(self):
-        code = self.lhs.codegen()
-        code.extend(self.rhs.codegen())
-        code.append(codegen.MathOp(self.op.value))
-        return code
-
-
-class AssignmentAST (AST):
-    def __init__(self, name, expr):
-        self.name, self.expr = name, expr
-
-    def __repr__(self):
-        return "AssignmentAST({}, {})".format(self.name, self.expr)
-
-    def __str__(self):
-        return "{} = {}".format(self.name.value.value, self.expr)
-
-    def codegen(self):
-        pass
+import bcast
 
 
 def parse_primary(tokens):
     if tokens.peek() == '(':
         return parse_expr(tokens.skip())
     elif tokens.peek().isa(Num):
-        return NumAST(tokens.next())
+        return bcast.Num(tokens.next())
     elif tokens.peek().isa(Ident):
-        return IdentAST(tokens.next())
+        return bcast.Ident(tokens.next())
     raise Exception("Parse Error")
 
 
@@ -94,7 +37,7 @@ def parse_binop_rhs(tokens, lhs, prec):
             op_prec = precedence[look.value]
             rhs = parse_binop_rhs(tokens, rhs, op_prec)
             look = tokens.peek()
-        lhs = BinOpAST(lhs, op, rhs)
+        lhs = bcast.BinOp(lhs, op, rhs)
     return lhs
 
 
@@ -116,7 +59,7 @@ def parse_statement(tokens):
     expr = parse_primary(tokens)
     if tokens.peek() == '=':
         rhs = parse_expr(tokens.skip())
-        return AssignmentAST(expr, rhs)
+        return bcast.Assignment(expr, rhs)
 
     return parse_expr(tokens, expr)
 

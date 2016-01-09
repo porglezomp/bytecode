@@ -10,12 +10,16 @@ tests = [
     "a^b^c^d",
     "a - b - c - d",
     "a + b * c - d",
+    "a = 1 + 2 ; b = a - 2 ; c = a * b",
 ]
+
 print('-'*32)
 for test in tests:
     tokens = tokenize(test)
     ast = parse(tokens)
-    stack = codegen(ast)
-    for item in stack:
-        print(item)
+    # stack = codegen(ast)
+    # for item in stack:
+    #     print(item)
+    for statement in ast:
+        print(statement)
     print('-'*32)

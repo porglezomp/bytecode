@@ -45,6 +45,20 @@ class BinOpAST (AST):
         return code
 
 
+class AssignmentAST (AST):
+    def __init__(self, name, expr):
+        self.name, self.expr = name, expr
+
+    def __repr__(self):
+        return "AssignmentAST({}, {})".format(self.name, self.expr)
+
+    def __str__(self):
+        return "{} = {}".format(self.name.value.value, self.expr)
+
+    def codegen(self):
+        pass
+
+
 def parse_primary(tokens):
     if tokens.peek() == '(':
         return parse_expr(tokens.skip())
@@ -52,7 +66,7 @@ def parse_primary(tokens):
         return NumAST(tokens.next())
     elif tokens.peek().isa(Ident):
         return IdentAST(tokens.next())
-    return tokens.next()
+    raise Exception("Parse Error")
 
 
 operator_table = {
@@ -84,8 +98,10 @@ def parse_binop_rhs(tokens, lhs, prec):
     return lhs
 
 
-def parse_expr(tokens):
-    expr = parse_primary(tokens)
+def parse_expr(tokens, expr=None):
+    if expr is None:
+        expr = parse_primary(tokens)
+
     if not tokens.peek():
         return expr
 
@@ -96,5 +112,20 @@ def parse_expr(tokens):
     return expr
 
 
+def parse_statement(tokens):
+    expr = parse_primary(tokens)
+    if tokens.peek() == '=':
+        rhs = parse_expr(tokens.skip())
+        return AssignmentAST(expr, rhs)
+
+    return parse_expr(tokens, expr)
+
+
 def parse(tokens):
-    return parse_expr(tokens)
+    statements = []
+    while tokens.peek():
+        statements.append(parse_statement(tokens))
+        if tokens.peek() == ';':
+            tokens.skip()
+
+    return statements

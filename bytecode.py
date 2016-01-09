@@ -22,5 +22,7 @@ for test in tests:
         print(statement)
     print('= '*16)
     for item in stack:
-        print(item)
+        print(item, end="  \t|")
+        print(*map(lambda c: '{:02x}'.format(ord(c)), item.to_bytecode()),
+              end="|\n")
     print('-'*32)

@@ -1,5 +1,7 @@
 from __future__ import print_function
 
+import sys
+
 from lexer import tokenize
 from bcparser import parse
 from codegen import codegen
@@ -13,16 +15,25 @@ tests = [
     "a = 1 + 2 ; b = a - 2 ; c = a * b",
 ]
 
-print('-'*32)
-for test in tests:
-    tokens = tokenize(test)
+
+def compile(name):
+    with open(name, 'r') as f:
+        text = f.read()
+    tokens = tokenize(text)
     ast = parse(tokens)
     stack = codegen(ast)
-    for statement in ast:
-        print(statement)
-    print('= '*16)
-    for item in stack:
-        print(item, end="  \t|")
-        print(*map(lambda c: '{:02x}'.format(ord(c)), item.to_bytecode()),
-              end="|\n")
-    print('-'*32)
+    code = [instr.to_bytecode() for instr in stack]
+    return b''.join(code)
+
+if __name__ == '__main__':
+    if len(sys.argv) < 2:
+        print("Name a file")
+        exit(0)
+
+    output = compile(sys.argv[1])
+    outfile = 'out.bc'
+    if len(sys.argv) > 2:
+        outfile = sys.argv[2]
+
+    with open(outfile, 'wb') as f:
+        f.write(output)

@@ -1,5 +1,7 @@
 .cache/
 .hypothesis/
 .tox/
+__pycache__/
 
 *.pyc
+*.bc

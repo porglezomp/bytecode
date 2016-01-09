@@ -17,7 +17,7 @@ class AST:
 
 class Num (AST):
     def codegen(self):
-        return [codegen.PushNum(int(self.value.value))]
+        return [codegen.PushNum(self.value.value)]
 
 
 class NameLabel (AST):

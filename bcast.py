@@ -89,3 +89,17 @@ class Assignment (AST):
         self.name = self.name.label(env)
         self.expr = self.expr.label(env)
         return self
+
+
+class Return (AST):
+    def codegen(self):
+        code = self.value.codegen()
+        code.append(codegen.Return())
+        return code
+
+    def __str__(self):
+        return "return {}".format(self.value)
+
+    def label(self, env):
+        self.value = self.value.label(env)
+        return self

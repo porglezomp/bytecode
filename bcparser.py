@@ -1,4 +1,4 @@
-from lexer import Num, Ident, Op
+from lexer import Num, Ident, Op, Keyword
 import bcast
 
 
@@ -59,12 +59,17 @@ def parse_expr(tokens, expr=None):
 
 
 def parse_statement(tokens):
-    expr = parse_primary(tokens)
-    if tokens.peek() == '=':
-        rhs = parse_expr(tokens.skip())
-        return bcast.Assignment(expr, rhs)
+    if tokens.peek().isa(Keyword):
+        if tokens.peek() == 'return':
+            expr = parse_expr(tokens.skip())
+            return bcast.Return(expr)
+    else:
+        expr = parse_primary(tokens)
+        if tokens.peek() == '=':
+            rhs = parse_expr(tokens.skip())
+            return bcast.Assignment(expr, rhs)
 
-    return parse_expr(tokens, expr)
+        return parse_expr(tokens, expr)
 
 
 def parse(tokens):

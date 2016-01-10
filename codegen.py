@@ -59,6 +59,17 @@ class MathOp (Code):
         return struct.pack('<Bi', 4, MathOp.op_info[self.value][1])
 
 
+class Return (Code):
+    def __init__(self):
+        pass
+
+    def __str__(self):
+        return 'RETURN'
+
+    def to_bytecode(self):
+        return struct.pack('<Bi', 5, 0)
+
+
 def codegen(ast):
     code = []
     env = [0, {}]

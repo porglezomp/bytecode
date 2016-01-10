@@ -33,4 +33,5 @@ def interp(bytecode):
             lhs = data_stack.pop()
             operation = ops[instr.value]
             data_stack.append(operation(lhs, rhs))
-        print(data_stack, local_stack)
+        elif instr.isa(codegen.Return):
+            return data_stack.pop()

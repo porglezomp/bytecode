@@ -27,9 +27,11 @@ class Ident (Token): pass
 class Char (Token): pass
 class Op (Token): pass
 class Sep (Token): pass
+class Keyword (Token): pass
 
 
 handlers = [
+    (Keyword, re.compile('return')),
     (Op, re.compile('[-+/*^]')),
     (Ident, re.compile('[a-zA-Z_][a-zA-Z0-9_]*')),
     (Num, re.compile('[0-9]+\.?[0-9]*')),

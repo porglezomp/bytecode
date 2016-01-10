@@ -42,4 +42,4 @@ if __name__ == '__main__':
         outfile = sys.argv[2]
         output(code, outfile)
     else:
-        interp(code)
+        print(interp(code))

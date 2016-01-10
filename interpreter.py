@@ -1,2 +1,3 @@
 def interp(bytecode):
-    pass
+    for instr in bytecode:
+        print(instr)

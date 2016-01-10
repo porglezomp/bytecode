@@ -5,6 +5,7 @@ import sys
 from lexer import tokenize
 from bcparser import parse
 from codegen import codegen
+from interpreter import interp
 
 
 tests = [
@@ -22,18 +23,23 @@ def compile(name):
     tokens = tokenize(text)
     ast = parse(tokens)
     stack = codegen(ast)
-    code = [instr.to_bytecode() for instr in stack]
-    return b''.join(code)
+    return stack
+
+
+def output(code, name):
+    code = [instr.to_bytecode() for instr in code]
+    with open(name, 'wb') as f:
+        f.write(b''.join(code))
+
 
 if __name__ == '__main__':
     if len(sys.argv) < 2:
         print("Name a file")
         exit(0)
 
-    output = compile(sys.argv[1])
-    outfile = 'out.bc'
+    code = compile(sys.argv[1])
     if len(sys.argv) > 2:
         outfile = sys.argv[2]
-
-    with open(outfile, 'wb') as f:
-        f.write(output)
+        output(code, outfile)
+    else:
+        interp(code)

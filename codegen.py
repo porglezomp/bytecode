@@ -12,6 +12,9 @@ class Code:
     def __repr__(self):
         return "{}({!r})".format(self.__class__.__name__, self.value)
 
+    def isa(self, ty):
+        return isinstance(self, ty)
+
 
 class PushNum (Code):
     def __str__(self):

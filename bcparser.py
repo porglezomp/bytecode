@@ -9,7 +9,10 @@ def parse_primary(tokens):
         return bcast.Num(tokens.next())
     elif tokens.peek().isa(Ident):
         return bcast.Ident(tokens.next())
-    raise Exception("Parse Error")
+    raise Exception("Parse Error, got {}, expecting a number, \
+variable, or parenthesis.".format(
+        tokens.peek()
+    ))
 
 
 operator_table = {

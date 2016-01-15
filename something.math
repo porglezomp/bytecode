@@ -1,5 +1,7 @@
+# Any sensible optimizer should probably get rid of all of this
 a = 13 * 2 - 8;
 b = 9 * 2;
 c = a ^ b;
 d = c - (a * b);
+# If we return our output, the interpreter will print it!
 return d;

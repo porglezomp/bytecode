@@ -23,6 +23,9 @@ class Token:
         else:
             return self.value == other
 
+    def __ne__(self, other):
+        return not (self == other)
+
     # This is my favorite trick, use the __class__.__name__ to format the repr,
     # so that subclasses automatically work correctly.
     def __repr__(self):

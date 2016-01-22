@@ -1,6 +1,7 @@
+#!/usr/bin/env python3
 from __future__ import print_function
 
-import sys
+import argparse
 
 from lexer import tokenize
 from bcparser import parse
@@ -17,7 +18,7 @@ tests = [
 ]
 
 
-def compile(name):
+def compile_bytecode(name):
     with open(name, 'r') as f:
         text = f.read()
     tokens = tokenize(text)
@@ -32,14 +33,34 @@ def output(code, name):
         f.write(b''.join(code))
 
 
-if __name__ == '__main__':
-    if len(sys.argv) < 2:
-        print("Name a file")
-        exit(0)
+def prettyprint(code):
+    return '\n'.join(str(instr) for instr in code)
 
-    code = compile(sys.argv[1])
-    if len(sys.argv) > 2:
-        outfile = sys.argv[2]
-        output(code, outfile)
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(
+        description='Compile or interpret .math scripts.')
+
+    parser.add_argument('filename', type=str,
+                        help='the file to compile or interpret')
+    parser.add_argument('-o, --out', dest='output', type=str,
+                        help='the file to write compiled output to')
+    parser.add_argument('-p, --pretty', dest='pretty',
+                        action='store_true',
+                        help='output pretty-printed code')
+
+    args = parser.parse_args()
+
+    code = compile_bytecode(args.filename)
+    if args.pretty:
+        out = prettyprint(code)
+        if args.output:
+            with open(args.output, 'w') as f:
+                f.write(out)
+        else:
+            print(out)
+    elif args.output:
+        output(code, args.output)
     else:
-        print(interp(code))
+        result = interp(code)
+        print(result)

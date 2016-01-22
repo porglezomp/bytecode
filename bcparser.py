@@ -22,8 +22,8 @@ operator_table = {
     '+': (1, 'L'),
     '-': (1, 'L'),
 }
-precedence = {k: v for k, (v, _) in operator_table.iteritems()}
-associativity = {k: v for k, (_, v) in operator_table.iteritems()}
+precedence = {k: v for k, (v, _) in operator_table.items()}
+associativity = {k: v for k, (_, v) in operator_table.items()}
 
 
 def parse_binop_rhs(tokens, lhs, prec):

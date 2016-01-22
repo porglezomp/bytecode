@@ -1,4 +1,4 @@
-class Lookahead:
+class Lookahead(object):
     """
     Wrap a generator to include a single object of lookahead.
     Will return None if you peek() at a completed generator
@@ -7,7 +7,7 @@ class Lookahead:
         self.gen = gen
         self.done = False
         try:
-            self._peek = self.gen.next()
+            self._peek = next(self.gen)
         except StopIteration:
             self._peek = None
             self.done = True
@@ -19,12 +19,15 @@ class Lookahead:
         return self
 
     def next(self):
+        return next(self)
+
+    def __next__(self):
         value = self._peek
         if self.done:
             raise StopIteration
 
         try:
-            self._peek = self.gen.next()
+            self._peek = next(self.gen)
         except StopIteration:
             self._peek = None
             self.done = True

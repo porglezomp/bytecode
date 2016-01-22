@@ -1,7 +1,7 @@
-from __future__ import print_function
-import codegen
+import bcinstr
 
 
+DEBUG = False
 ops = {
     '+': lambda a, b: a + b,
     '-': lambda a, b: a - b,
@@ -20,33 +20,31 @@ def interp(fns, bytecode):
     call_stack = []
     while True:
         instr = code[ip]
-        if instr.isa(codegen.PushNum):
+        if instr.isa(bcinstr.PushNum):
             data_stack.append(instr.value)
-        elif instr.isa(codegen.LoadLocal):
+        elif instr.isa(bcinstr.LoadLocal):
             addr = instr.value
             value = local_stack[addr]
             data_stack.append(value)
-        elif instr.isa(codegen.StoreLocal):
+        elif instr.isa(bcinstr.StoreLocal):
             addr = instr.value
             value = data_stack.pop()
             if addr >= len(local_stack):
                 extra_needed = addr - len(local_stack) + 1
                 local_stack.extend([None]*extra_needed)
             local_stack[addr] = value
-        elif instr.isa(codegen.MathOp):
+        elif instr.isa(bcinstr.MathOp):
             rhs = data_stack.pop()
             lhs = data_stack.pop()
-            operation = ops[instr.value]
-            data_stack.append(operation(lhs, rhs))
-        elif instr.isa(codegen.Return):
-            ret = data_stack.pop()
+            data_stack.append(ops[instr.value](lhs, rhs))
+        elif instr.isa(bcinstr.Return):
             if not call_stack:
-                return ret
+                return data_stack.pop()
             else:
-                data_stack.append(ret)
+                data_stack.append(data_stack.pop())
             local_stack = local_save.pop()
             code, ip = call_stack.pop()
-        elif instr.isa(codegen.Call):
+        elif instr.isa(bcinstr.Call):
             local_save.append(local_stack)
             local_stack = []
             call_stack.append((code, ip))
@@ -55,7 +53,7 @@ def interp(fns, bytecode):
         else:
             raise Exception("Unsupported instruction " + instr)
         ip += 1
-        if False:
+        if DEBUG:
             print('@@@')
             print('code', code)
             print('ip', ip)

@@ -1,7 +1,8 @@
-import lexer
-from lexer import Ident, Num
 from hypothesis import given
 from hypothesis.strategies import text, floats, integers
+
+import lexer
+from lexer import Ident, Num
 
 
 @given(text())

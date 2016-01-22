@@ -27,7 +27,7 @@ fn mul(a, b) {
    return a * b;
 }
 
-
+# 2 * 2 + 2 * 2
 return id(add(id2(mul(id3(2),
                       id3(2))),
               id2(mul(id3(2),

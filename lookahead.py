@@ -37,7 +37,7 @@ class Lookahead(object):
     def skip(self):
         try:
             self.next()
-        except:
+        except Exception:
             pass
         return self
 

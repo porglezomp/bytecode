@@ -1,7 +1,7 @@
-import codegen
+import bcinstr
 
 
-class Env:
+class Env(object):
     def __init__(self, parent=None):
         self.next_local = 0
         self.next_function = 0
@@ -27,7 +27,7 @@ class Env:
         fn.name = NameLabel(self.functions[fn.name.value])
 
 
-class AST:
+class AST(object):
     """
     The AST base class handles everything necessary for a single-valued AST
     node. This means that most subclasses don't need to impelement __repr__,
@@ -56,19 +56,19 @@ class AST:
     # steps. All variables are replaced by indices into the local variables
     # stack. In general though, most AST objects don't need to do anything
     # special.
-    def label(self, env):
+    def label(self, _):
         return self
 
 
-class Num (AST):
+class Num(AST):
     """
     Represents a literal number.
     """
     def codegen(self):
-        return [codegen.PushNum(self.value.value)]
+        return [bcinstr.PushNum(self.value.value)]
 
 
-class Ident (AST):
+class Ident(AST):
     """
     Represents a variable.
     """
@@ -80,20 +80,20 @@ class Ident (AST):
         return NameLabel(env.local_names[self.value.value])
 
 
-class NameLabel (Ident):
+class NameLabel(Ident):
     """
     A lower level replacement for a variable. Any two variables with the same
     label are the same variable, and the index of the label corresponds to the
     position of that variable stored on the local variables stack.
     """
     def codegen(self):
-        return [codegen.LoadLocal(self.value)]
+        return [bcinstr.LoadLocal(self.value)]
 
     def __str__(self):
         return "[{}]".format(self.value)
 
 
-class BinOp (AST):
+class BinOp(AST):
     """
     Represents a binary operation on two expressions. The lhs and rhs
     attributes represent the two expressions, and the op attribute
@@ -119,7 +119,7 @@ class BinOp (AST):
     def codegen(self):
         code = self.lhs.codegen()
         code.extend(self.rhs.codegen())
-        code.append(codegen.MathOp(self.op.value))
+        code.append(bcinstr.MathOp(self.op.value))
         return code
 
     # Recursively label both sides, with a shared environment.
@@ -129,7 +129,7 @@ class BinOp (AST):
         return self
 
 
-class Assignment (AST):
+class Assignment(AST):
     """
     Represents the creation and assignment of variables. The right hand side of
     the assignment is stored in the expr attribute. The AST is invalid if
@@ -147,7 +147,7 @@ class Assignment (AST):
 
     def codegen(self):
         code = self.expr.codegen()
-        code.append(codegen.StoreLocal(self.name.value))
+        code.append(bcinstr.StoreLocal(self.name.value))
         return code
 
     # Either replace the left hand side with a label from the environement,
@@ -162,13 +162,13 @@ class Assignment (AST):
         return self
 
 
-class Return (AST):
+class Return(AST):
     """
     Represents return a result from the program.
     """
     def codegen(self):
         code = self.value.codegen()
-        code.append(codegen.Return())
+        code.append(bcinstr.Return())
         return code
 
     def __str__(self):
@@ -179,7 +179,7 @@ class Return (AST):
         return self
 
 
-class Fn (AST):
+class Fn(AST):
     def __init__(self, name, args, body):
         self.name, self.args, self.body = name, args, body
 
@@ -199,7 +199,7 @@ class Fn (AST):
     def codegen(self):
         code = []
         for i, _ in enumerate(self.args):
-            code.append(codegen.StoreLocal(i))
+            code.append(bcinstr.StoreLocal(i))
         code = list(reversed(code))
         for line in self.body:
             code.extend(line.codegen())
@@ -221,7 +221,7 @@ class Fn (AST):
         return self
 
 
-class Call (AST):
+class Call(AST):
     def __init__(self, name, args):
         self.name, self.args = name, args
 
@@ -238,7 +238,7 @@ class Call (AST):
         code = []
         for arg in self.args:
             code.extend(arg.codegen())
-        code.append(codegen.Call(self.name.value))
+        code.append(bcinstr.Call(self.name.value))
         return code
 
     def label(self, env):

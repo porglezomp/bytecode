@@ -2,7 +2,7 @@ import re
 from lookahead import lookahead
 
 
-class Token:
+class Token(object):
     """
     A Token represents the results of the lexing process.
 
@@ -24,42 +24,42 @@ class Token:
             return self.value == other
 
     def __ne__(self, other):
-        return not (self == other)
+        return not self == other
 
     # This is my favorite trick, use the __class__.__name__ to format the repr,
     # so that subclasses automatically work correctly.
     def __repr__(self):
         return "{}({})".format(self.__class__.__name__, repr(self.value))
 
-    def isa(self, ty):
+    def isa(self, typ):
         """
         Sugar for isinstance()
         """
-        return isinstance(self, ty)
+        return isinstance(self, typ)
 
 
-class Num (Token):
+class Num(Token):
     def __init__(self, value):
         self.value = float(value)
 
-class Ident (Token): pass
-class Char (Token): pass
-class Op (Token): pass
-class Sep (Token): pass
-class Keyword (Token): pass
+class Ident(Token): pass
+class Char(Token): pass
+class Op(Token): pass
+class Sep(Token): pass
+class Keyword(Token): pass
 
 
 # The handlers are pairs of constructors and regular expressions. When a
 # regular expression matches, that constructor will be called and the
 # matched text with be consumed.
-handlers = [
+HANDLERS = [
     # None means skip
-    (lambda _: None, re.compile('#.*')),
-    (Keyword, re.compile('return|fn')),
-    (Op, re.compile('[-+/*^]')),
-    (Ident, re.compile('[a-zA-Z_][a-zA-Z0-9_]*')),
-    (Num, re.compile('[0-9]+\.?[0-9]*')),
-    (Sep, re.compile(';')),
+    (lambda _: None, re.compile(r'#.*')),
+    (Keyword, re.compile(r'return|fn')),
+    (Op, re.compile(r'[-+/*^]')),
+    (Ident, re.compile(r'[a-zA-Z_][a-zA-Z0-9_]*')),
+    (Num, re.compile(r'[0-9]+\.?[0-9]*')),
+    (Sep, re.compile(r';')),
 ]
 
 
@@ -68,7 +68,7 @@ def tokenize(string):
     while True:
         # Strip any leading whitespace
         string = string.lstrip()
-        for handler, pattern in handlers:
+        for handler, pattern in HANDLERS:
             match = pattern.match(string)
             if match:
                 value = handler(match.group(0))

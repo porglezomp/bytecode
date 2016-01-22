@@ -58,6 +58,13 @@ def interp(fns, bytecode):
             call_stack.append((code, ip))
             ip = -1
             code = fns[instr.value]
+        elif instr.isa(bcinstr.Branch):
+            ip += instr.value
+        elif instr.isa(bcinstr.CondBranch):
+            if data_stack.pop():
+                ip += instr.true_loc
+            else:
+                ip += instr.false_loc
         else:
             raise Exception("Unsupported instruction " + instr)
         ip += 1

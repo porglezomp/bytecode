@@ -84,3 +84,23 @@ class Call(Instr):
 
     def to_bytecode(self):
         return struct.pack('<Bi', 6, self.value)
+
+
+class Branch(Instr):
+    def __str__(self):
+        return pad("BRANCH", 15) + str(self.value)
+
+    def to_bytecode(self):
+        return struct.pack('<Bi', 7, self.value)
+
+
+class CondBranch(Instr):
+    def __init__(self, true_loc, false_loc):
+        self.true_loc = true_loc
+        self.false_loc = false_loc
+
+    def __str__(self):
+        return pad("COND_BRANCH", 15) + str(self.t) + ' ' + str(self.e)
+
+    def to_bytecode(self):
+        return struct.pack('<Bhh', 8, self.true_loc, self.false_loc)

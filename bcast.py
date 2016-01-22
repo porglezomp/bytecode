@@ -3,47 +3,28 @@ import codegen
 
 class Env:
     def __init__(self, parent=None):
-        self.parent = parent
         self.next_local = 0
         self.next_function = 0
-        self._local_names = {}
-        self._functions = {}
+        self.local_names = {}
+        self.functions = {}
 
-    def local_contains(self, item):
-        if item in self._local_names:
-            return True
-        if self.parent is None:
-            return False
-        return self.parent.local_contains(item)
+        self.parent = parent
+        if self.parent is not None:
+            self.next_function = self.parent.next_function
+            self.functions = self.parent.functions
 
-    def local_names(self, name):
-        if name in self._local_names:
-            return self._local_names[name]
-        if self.parent is None:
-            raise IndexError()
-        return self.parent.local_names(name)
-
-    def function_contains(self, item):
-        if item in self._functions:
-            return True
-        if self.parent is None:
-            return False
-        return self.parent.function_contains(item)
-
-    def function_names(self, name):
-        if name in self._functions:
-            return self._functions[name]
-        if self.parent is None:
-            raise IndexError()
-        return self.parent.function_names(name)
+    def __str__(self):
+        return "(functions: {fns}, local_names: {loc})".format(
+            fns=self.functions, loc=self.local_names)
 
     def declare_function(self, fn):
-        if self.parent:
-            self.parent.declare_function(fn.name)
-        else:
-            self._functions[fn.name.value] = self.next_function
-            self.next_function += 1
-            fn.name = NameLabel(self.function_names(fn.name.value))
+        if fn.name.value in self.functions:
+            raise Exception('function ' + fn.name.value +
+                            ' already defined')
+
+        self.functions[fn.name.value] = self.next_function
+        self.next_function += 1
+        fn.name = NameLabel(self.functions[fn.name.value])
 
 
 class AST:
@@ -92,11 +73,11 @@ class Ident (AST):
     Represents a variable.
     """
     def label(self, env):
-        if not env.local_contains(self.value.value):
+        if self.value.value not in env.local_names:
             raise Exception("Variable `{}` is undefined".format(
                 self.value.value
             ))
-        return NameLabel(env.local_names(self.value.value))
+        return NameLabel(env.local_names[self.value.value])
 
 
 class NameLabel (Ident):
@@ -173,8 +154,8 @@ class Assignment (AST):
     # or, if it's not present in the environment, bind it as a fresh name.
     # After labelling and binding the left hand side, label the expression.
     def label(self, env):
-        if not env.local_contains(self.name.value.value):
-            env._local_names[self.name.value.value] = env.next_local
+        if self.name.value.value not in env.local_names:
+            env.local_names[self.name.value.value] = env.next_local
             env.next_local += 1
         self.name = self.name.label(env)
         self.expr = self.expr.label(env)
@@ -225,13 +206,12 @@ class Fn (AST):
         return code
 
     def label(self, env):
+        # Create a fresh environment local to the function,
+        # with references to all functions in the global scope
         env = Env(env)
-        if env.function_contains(self.name.value):
-            raise Exception('function ' + self.name.value +
-                            ' already defined')
 
         for i, name in enumerate(self.args):
-            env._local_names[name.value] = env.next_local
+            env.local_names[name.value] = env.next_local
             self.args[i] = NameLabel(env.next_local)
             env.next_local += 1
 
@@ -262,8 +242,8 @@ class Call (AST):
         return code
 
     def label(self, env):
-        if not env.function_contains(self.name.value):
+        if self.name.value not in env.functions:
             raise Exception('{} not defined'.format(self.name.value))
-        self.name = NameLabel(env.function_names(self.name.value))
+        self.name = NameLabel(env.functions[self.name.value])
         self.args = [arg.label(env) for arg in self.args]
         return self

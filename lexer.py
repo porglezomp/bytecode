@@ -56,7 +56,7 @@ HANDLERS = [
     # None means skip
     (lambda _: None, re.compile(r'#.*')),
     (Keyword, re.compile(r'return|fn')),
-    (Op, re.compile(r'[-+/*^]')),
+    (Op, re.compile(r'-|\+|/|\*|\^|<=?|>=?|==|!=|&&|\|\|')),
     (Ident, re.compile(r'[a-zA-Z_][a-zA-Z0-9_]*')),
     (Num, re.compile(r'[0-9]+\.?[0-9]*')),
     (Sep, re.compile(r';')),

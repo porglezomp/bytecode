@@ -8,6 +8,14 @@ ops = {
     '*': lambda a, b: a * b,
     '/': lambda a, b: a / b,
     '^': lambda a, b: a ** b,
+    '>': lambda a, b: float(a > b),
+    '<': lambda a, b: float(a < b),
+    '>=': lambda a, b: float(a >= b),
+    '<=': lambda a, b: float(a <= b),
+    '==': lambda a, b: float(a == b),
+    '!=': lambda a, b: float(a != b),
+    '&&': lambda a, b: float(a and b),
+    '||': lambda a, b: float(a or b),
 }
 
 

@@ -28,7 +28,8 @@ fn mul(a, b) {
 }
 
 # 2 * 2 + 2 * 2
-return id(add(id2(mul(id3(2),
-                      id3(2))),
-              id2(mul(id3(2),
-                      id3(2)))));
+return 1 > 0 && 0 < 1 && 10 == 11 || 1;
+# return id(add(id2(mul(id3(2),
+#                       id3(2))),
+#               id2(mul(id3(2),
+#                       id3(2)))));

@@ -36,12 +36,21 @@ def parse_args(tokens):
 
 
 operator_table = {
-    '^': (3, 'R'),
-    '*': (2, 'L'),
-    '/': (2, 'L'),
-    '+': (1, 'L'),
-    '-': (1, 'L'),
+    '^': (100, 'R'),
+    '*': (80, 'L'),
+    '/': (80, 'L'),
+    '+': (60, 'L'),
+    '-': (60, 'L'),
+    '<': (50, 'L'),
+    '>': (50, 'L'),
+    '<=': (50, 'L'),
+    '>=': (50, 'L'),
+    '==': (40, 'L'),
+    '!=': (40, 'L'),
+    '&&': (30, 'L'),
+    '||': (20, 'L'),
 }
+
 precedence = {k: v for k, (v, _) in operator_table.items()}
 associativity = {k: v for k, (_, v) in operator_table.items()}
 

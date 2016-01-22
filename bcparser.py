@@ -4,15 +4,35 @@ import bcast
 
 def parse_primary(tokens):
     if tokens.peek() == '(':
-        return parse_expr(tokens.skip())
+        expr = parse_expr(tokens.skip())
+        assert tokens.next() == ')'
+        return expr
+
     elif tokens.peek().isa(Num):
         return bcast.Num(tokens.next())
     elif tokens.peek().isa(Ident):
-        return bcast.Ident(tokens.next())
-    raise Exception("Parse Error, got {}, expecting a number, \
-variable, or parenthesis.".format(
-        tokens.peek()
-    ))
+        name = tokens.next()
+        if tokens.peek() == '(':
+            args = parse_args(tokens)
+            return bcast.Call(name, args)
+        else:
+            return bcast.Ident(name)
+    raise Exception("Parse Error, got {}, expecting a number, "
+                    "variable, or parenthesis.".format(
+                        tokens.peek()
+                    ))
+
+
+def parse_args(tokens):
+    assert tokens.next() == '('
+    args = []
+    while tokens.peek() != ')':
+        args.append(parse_expr(tokens))
+        if tokens.peek() == ',':
+            tokens.skip()
+
+    assert tokens.next() == ')'
+    return args
 
 
 operator_table = {
@@ -53,8 +73,6 @@ def parse_expr(tokens, expr=None):
 
     if tokens.peek().isa(Op):
         expr = parse_binop_rhs(tokens, expr, 0)
-    if tokens.peek() == ')':
-        tokens.skip()
     return expr
 
 
@@ -63,6 +81,29 @@ def parse_statement(tokens):
         if tokens.peek() == 'return':
             expr = parse_expr(tokens.skip())
             return bcast.Return(expr)
+        elif tokens.peek() == 'fn':
+            name = tokens.skip().next()
+            assert name.isa(Ident)
+            assert tokens.next() == '('
+            args = []
+            while tokens.peek().isa(Ident):
+                args.append(tokens.next())
+                if tokens.peek() == ',':
+                    tokens.skip()
+            assert tokens.next() == ')'
+            assert tokens.next() == '{'
+            statements = []
+            while tokens.peek() != '}':
+                if tokens.peek() == '}':
+                    break
+                statements.append(parse_statement(tokens))
+                if tokens.peek() == ';':
+                    tokens.skip()
+            assert tokens.next() == '}'
+            return bcast.Fn(name, args, statements)
+        raise Exception("Unimplemented keyword `{}`".format(
+            tokens.peek().value
+        ))
     else:
         expr = parse_primary(tokens)
         if tokens.peek() == '=':

@@ -1,6 +1,51 @@
 import codegen
 
 
+class Env:
+    def __init__(self, parent=None):
+        self.parent = parent
+        self.next_local = 0
+        self.next_function = 0
+        self._local_names = {}
+        self._functions = {}
+
+    def local_contains(self, item):
+        if item in self._local_names:
+            return True
+        if self.parent is None:
+            return False
+        return self.parent.local_contains(item)
+
+    def local_names(self, name):
+        if name in self._local_names:
+            return self._local_names[name]
+        if self.parent is None:
+            raise IndexError()
+        return self.parent.local_names(name)
+
+    def function_contains(self, item):
+        if item in self._functions:
+            return True
+        if self.parent is None:
+            return False
+        return self.parent.function_contains(item)
+
+    def function_names(self, name):
+        if name in self._functions:
+            return self._functions[name]
+        if self.parent is None:
+            raise IndexError()
+        return self.parent.function_names(name)
+
+    def declare_function(self, fn):
+        if self.parent:
+            self.parent.declare_function(fn.name)
+        else:
+            self._functions[fn.name.value] = self.next_function
+            self.next_function += 1
+            fn.name = NameLabel(self.function_names(fn.name.value))
+
+
 class AST:
     """
     The AST base class handles everything necessary for a single-valued AST
@@ -47,11 +92,11 @@ class Ident (AST):
     Represents a variable.
     """
     def label(self, env):
-        if self.value.value not in env[1]:
+        if not env.local_contains(self.value.value):
             raise Exception("Variable `{}` is undefined".format(
                 self.value.value
             ))
-        return NameLabel(env[1][self.value.value])
+        return NameLabel(env.local_names(self.value.value))
 
 
 class NameLabel (Ident):
@@ -128,9 +173,9 @@ class Assignment (AST):
     # or, if it's not present in the environment, bind it as a fresh name.
     # After labelling and binding the left hand side, label the expression.
     def label(self, env):
-        if self.name.value.value not in env[1]:
-            env[1][self.name.value.value] = env[0]
-            env[0] += 1
+        if not env.local_contains(self.name.value.value):
+            env._local_names[self.name.value.value] = env.next_local
+            env.next_local += 1
         self.name = self.name.label(env)
         self.expr = self.expr.label(env)
         return self
@@ -150,4 +195,75 @@ class Return (AST):
 
     def label(self, env):
         self.value = self.value.label(env)
+        return self
+
+
+class Fn (AST):
+    def __init__(self, name, args, body):
+        self.name, self.args, self.body = name, args, body
+
+    def __repr__(self):
+        return "{}({}, {}, {})".format(
+            self.__class__.__name__,
+            self.name, self.args, self.body
+        )
+
+    def __str__(self):
+        return "fn {name}({args}) {{\n{body}\n}}".format(
+            name=self.name.value,
+            args=', '.join(str(arg) for arg in self.args),
+            body='\n'.join("  {};".format(stmt) for stmt in self.body),
+        )
+
+    def codegen(self):
+        code = []
+        for i, _ in enumerate(self.args):
+            code.append(codegen.StoreLocal(i))
+        code = list(reversed(code))
+        for line in self.body:
+            code.extend(line.codegen())
+        return code
+
+    def label(self, env):
+        env = Env(env)
+        if env.function_contains(self.name.value):
+            raise Exception('function ' + self.name.value +
+                            ' already defined')
+
+        for i, name in enumerate(self.args):
+            env._local_names[name.value] = env.next_local
+            self.args[i] = NameLabel(env.next_local)
+            env.next_local += 1
+
+        for i, line in enumerate(self.body):
+            self.body[i] = line.label(env)
+
+        return self
+
+
+class Call (AST):
+    def __init__(self, name, args):
+        self.name, self.args = name, args
+
+    def __repr__(self):
+        return "{}({}, {})".format(
+            self.__class__.__name__,
+            self.name, self.args,
+        )
+
+    def __str__(self):
+        return "{}({})".format(self.name, ', '.join(self.args))
+
+    def codegen(self):
+        code = []
+        for arg in self.args:
+            code.extend(arg.codegen())
+        code.append(codegen.Call(self.name.value))
+        return code
+
+    def label(self, env):
+        if not env.function_contains(self.name.value):
+            raise Exception('{} not defined'.format(self.name.value))
+        self.name = NameLabel(env.function_names(self.name.value))
+        self.args = [arg.label(env) for arg in self.args]
         return self

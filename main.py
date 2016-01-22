@@ -23,8 +23,8 @@ def compile_bytecode(name):
         text = f.read()
     tokens = tokenize(text)
     ast = parse(tokens)
-    stack = codegen(ast)
-    return stack
+    fns, stack = codegen(ast)
+    return fns, stack
 
 
 def output(code, name):
@@ -33,8 +33,10 @@ def output(code, name):
         f.write(b''.join(code))
 
 
-def prettyprint(code):
-    return '\n'.join(str(instr) for instr in code)
+def prettyprint(fns, code):
+    fns = ['\n'.join(str(instr) for instr in fn) for fn in fns]
+    fns.append('\n'.join(str(instr) for instr in code))
+    return '\n\n'.join(fns)
 
 
 if __name__ == '__main__':
@@ -51,9 +53,9 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
-    code = compile_bytecode(args.filename)
+    fns, code = compile_bytecode(args.filename)
     if args.pretty:
-        out = prettyprint(code)
+        out = prettyprint(fns, code)
         if args.output:
             with open(args.output, 'w') as f:
                 f.write(out)
@@ -62,5 +64,5 @@ if __name__ == '__main__':
     elif args.output:
         output(code, args.output)
     else:
-        result = interp(code)
+        result = interp(fns, code)
         print(result)

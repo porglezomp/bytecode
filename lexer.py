@@ -55,7 +55,7 @@ class Keyword (Token): pass
 handlers = [
     # None means skip
     (lambda _: None, re.compile('#.*')),
-    (Keyword, re.compile('return')),
+    (Keyword, re.compile('return|fn')),
     (Op, re.compile('[-+/*^]')),
     (Ident, re.compile('[a-zA-Z_][a-zA-Z0-9_]*')),
     (Num, re.compile('[0-9]+\.?[0-9]*')),

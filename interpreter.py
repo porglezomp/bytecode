@@ -11,10 +11,15 @@ ops = {
 }
 
 
-def interp(bytecode):
+def interp(fns, bytecode):
+    code = bytecode
+    ip = 0
     data_stack = []
     local_stack = []
-    for instr in bytecode:
+    local_save = []
+    call_stack = []
+    while True:
+        instr = code[ip]
         if instr.isa(codegen.PushNum):
             data_stack.append(instr.value)
         elif instr.isa(codegen.LoadLocal):
@@ -25,7 +30,7 @@ def interp(bytecode):
             addr = instr.value
             value = data_stack.pop()
             if addr >= len(local_stack):
-                extra_needed = len(local_stack) - addr + 1
+                extra_needed = addr - len(local_stack) + 1
                 local_stack.extend([None]*extra_needed)
             local_stack[addr] = value
         elif instr.isa(codegen.MathOp):
@@ -34,4 +39,29 @@ def interp(bytecode):
             operation = ops[instr.value]
             data_stack.append(operation(lhs, rhs))
         elif instr.isa(codegen.Return):
-            return data_stack.pop()
+            ret = data_stack.pop()
+            if not call_stack:
+                return ret
+            else:
+                data_stack.append(ret)
+            local_stack = local_save.pop()
+            code, ip = call_stack.pop()
+        elif instr.isa(codegen.Call):
+            local_save.append(local_stack)
+            local_stack = []
+            call_stack.append((code, ip))
+            ip = -1
+            code = fns[instr.value]
+        else:
+            raise Exception("Unsupported instruction " + instr)
+        ip += 1
+        if False:
+            print('@@@')
+            print('code', code)
+            print('ip', ip)
+            print('data', data_stack)
+            print('local',  local_stack)
+            print('stack', '[{}]'.format(
+                ', '.join(str((Ellipsis, p)) for _, p in call_stack)))
+            print('scopes', local_save)
+            print()

@@ -1,4 +1,5 @@
 import struct
+import bcast
 
 
 def pad(string, width):
@@ -63,6 +64,9 @@ class Return (Code):
     def __init__(self):
         pass
 
+    def __repr__(self):
+        return "Return"
+
     def __str__(self):
         return 'RETURN'
 
@@ -70,10 +74,27 @@ class Return (Code):
         return struct.pack('<Bi', 5, 0)
 
 
+class Call (Code):
+    def __str__(self):
+        return 'CALL {}'.format(self.value)
+
+    def to_bytecode(self):
+        return struct.pack('<Bi', 6, self.value)
+
+
 def codegen(ast):
     code = []
-    env = [0, {}]
-    for line in ast:
-        line.label(env)
-        code.extend(line.codegen())
-    return code
+    env = bcast.Env()
+    functions = []
+    for stmt in ast:
+        if isinstance(stmt, bcast.Fn):
+            env.declare_function(stmt)
+
+    for stmt in ast:
+        stmt.label(env)
+        code = stmt.codegen()
+        if isinstance(stmt, bcast.Fn):
+            functions.append(code)
+        else:
+            code.extend(code)
+    return functions, code

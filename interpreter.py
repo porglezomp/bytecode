@@ -28,6 +28,18 @@ def interp(fns, bytecode):
     call_stack = []
     while True:
         instr = code[ip]
+        if DEBUG:
+            print('@@@')
+            print('code', code)
+            print('ip', ip)
+            print('instr', instr)
+            print('data', data_stack)
+            print('local',  local_stack)
+            print('stack', '[{}]'.format(
+                ', '.join(str((Ellipsis, p)) for _, p in call_stack)))
+            print('scopes', local_save)
+            print()
+
         if instr.isa(bcinstr.PushNum):
             data_stack.append(instr.value)
         elif instr.isa(bcinstr.LoadLocal):
@@ -48,8 +60,6 @@ def interp(fns, bytecode):
         elif instr.isa(bcinstr.Return):
             if not call_stack:
                 return data_stack.pop()
-            else:
-                data_stack.append(data_stack.pop())
             local_stack = local_save.pop()
             code, ip = call_stack.pop()
         elif instr.isa(bcinstr.Call):
@@ -68,13 +78,3 @@ def interp(fns, bytecode):
         else:
             raise Exception("Unsupported instruction " + instr)
         ip += 1
-        if DEBUG:
-            print('@@@')
-            print('code', code)
-            print('ip', ip)
-            print('data', data_stack)
-            print('local',  local_stack)
-            print('stack', '[{}]'.format(
-                ', '.join(str((Ellipsis, p)) for _, p in call_stack)))
-            print('scopes', local_save)
-            print()

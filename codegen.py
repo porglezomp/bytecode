@@ -11,9 +11,9 @@ def codegen(ast):
 
     for stmt in ast:
         stmt.label(env)
-        code = stmt.codegen()
+        fn_code = stmt.codegen()
         if isinstance(stmt, bcast.Fn):
-            functions.append(code)
+            functions.append(fn_code)
         else:
-            code.extend(code)
+            code.extend(fn_code)
     return functions, code

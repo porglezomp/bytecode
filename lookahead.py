@@ -19,7 +19,7 @@ class Lookahead(object):
         return self
 
     def next(self):
-        return next(self)
+        return self.__next__()
 
     def __next__(self):
         value = self._peek

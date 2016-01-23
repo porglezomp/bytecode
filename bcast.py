@@ -203,6 +203,9 @@ class Fn(AST):
         code = list(reversed(code))
         for line in self.body:
             code.extend(line.codegen())
+        if not code[-1].isa(bcinstr.Return):
+            code.append(bcinstr.PushNum(0))
+            code.append(bcinstr.Return())
         return code
 
     def label(self, env):
@@ -246,4 +249,60 @@ class Call(AST):
             raise Exception('{} not defined'.format(self.name.value))
         self.name = NameLabel(env.functions[self.name.value])
         self.args = [arg.label(env) for arg in self.args]
+        return self
+
+
+class IfElse(AST):
+    def __init__(self, cond, if_block, else_block):
+        self.cond = cond
+        self.if_block, self.else_block = if_block, else_block
+
+    def __repr__(self):
+        return "{}({}, {}, {})".format(
+            self.__class__.__name__,
+            self.cond, self.if_block, self.else_block,
+        )
+
+    def __str__(self):
+        if self.else_block is None:
+            return "if {} {{\n  {}\n}}".format(
+                self.cond,
+                '  \n'.join(str(stmt) for stmt in self.if_block),
+            )
+        elif (len(self.else_block) == 1 and
+              isinstance(self.else_block[0], IfElse)):
+            return "if {} {{\n  {}\n}} else {}".format(
+                self.cond,
+                '  \n'.join(str(stmt) for stmt in self.if_block),
+                str(self.else_block[0]),
+            )
+        else:
+            return "if {} {{\n  {}\n}} else {{\n  {}\n}}".format(
+                self.cond,
+                '  \n'.join(str(stmt) for stmt in self.if_block),
+                '  \n'.join(str(stmt) for stmt in self.else_block)
+            )
+
+    def codegen(self):
+        code = self.cond.codegen()
+        if_code = []
+        for stmt in self.if_block:
+            if_code.extend(stmt.codegen())
+        else_code = []
+        if self.else_block is not None:
+            for stmt in self.else_block:
+                else_code.extend(stmt.codegen())
+        if_code.append(bcinstr.Branch(len(else_code)))
+        code.append(bcinstr.CondBranch(0, len(if_code)))
+        code.extend(if_code)
+        code.extend(else_code)
+        return code
+
+    def label(self, env):
+        self.cond = self.cond.label(env)
+        for stmt in self.if_block:
+            stmt.label(env)
+        if self.else_block is not None:
+            for stmt in self.else_block:
+                stmt.label(env)
         return self

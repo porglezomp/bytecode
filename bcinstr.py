@@ -99,8 +99,14 @@ class CondBranch(Instr):
         self.true_loc = true_loc
         self.false_loc = false_loc
 
+    def __repr__(self):
+        return "{}({}, {})".format(
+            self.__class__.__name__,
+            self.true_loc, self.false_loc)
+
     def __str__(self):
-        return pad("COND_BRANCH", 15) + str(self.t) + ' ' + str(self.e)
+        return (pad("COND_BRANCH", 15) + str(self.true_loc) +
+                ' ' + str(self.false_loc))
 
     def to_bytecode(self):
         return struct.pack('<Bhh', 8, self.true_loc, self.false_loc)

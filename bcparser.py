@@ -85,6 +85,19 @@ def parse_expr(tokens, expr=None):
     return expr
 
 
+def parse_block(tokens):
+    assert tokens.next() == '{'
+    statements = []
+    while tokens.peek() != '}':
+        if tokens.peek() == '}':
+            break
+        statements.append(parse_statement(tokens))
+        if tokens.peek() == ';':
+            tokens.skip()
+    assert tokens.next() == '}'
+    return statements
+
+
 def parse_statement(tokens):
     if tokens.peek().isa(Keyword):
         if tokens.peek() == 'return':
@@ -100,19 +113,22 @@ def parse_statement(tokens):
                 if tokens.peek() == ',':
                     tokens.skip()
             assert tokens.next() == ')'
-            assert tokens.next() == '{'
-            statements = []
-            while tokens.peek() != '}':
-                if tokens.peek() == '}':
-                    break
-                statements.append(parse_statement(tokens))
-                if tokens.peek() == ';':
-                    tokens.skip()
-            assert tokens.next() == '}'
+            statements = parse_block(tokens)
             return bcast.Fn(name, args, statements)
-        raise Exception("Unimplemented keyword `{}`".format(
-            tokens.peek().value
-        ))
+        elif tokens.peek() == 'if':
+            cond = parse_expr(tokens.skip())
+            if_block = parse_block(tokens)
+            else_block = None
+            if tokens.peek() == 'else':
+                tokens.next()
+                if tokens.peek() == 'if':
+                    else_block = [parse_statement(tokens)]
+                else:
+                    else_block = parse_block(tokens)
+            return bcast.IfElse(cond, if_block, else_block)
+        else:
+            raise Exception("Unimplemented keyword `{}`".format(
+                tokens.peek().value))
     else:
         expr = parse_primary(tokens)
         if tokens.peek() == '=':

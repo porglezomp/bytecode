@@ -27,8 +27,26 @@ fn mul(a, b) {
    return a * b;
 }
 
+if 1 < 0 {
+  return 420 / 10;
+} else if 1 == 2 {
+  return 32;
+} else {
+  return fib(64);
+}
+
+fn fib(n) {
+  return fib2(n, 0, 1);
+}
+
+fn fib2(n, a, b) {
+  if n <= 0 {
+    return a;
+  }
+  return fib2(n - 1, b, a + b);
+}
+
 # 2 * 2 + 2 * 2
-return 1 > 0 && 0 < 1 && 10 == 11 || 1;
 # return id(add(id2(mul(id3(2),
 #                       id3(2))),
 #               id2(mul(id3(2),

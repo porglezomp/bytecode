@@ -45,6 +45,10 @@ class AST(object):
     def __str__(self):
         return str(self.value.value)
 
+    def __eq__(self, other):
+        return (self.__class__ == other.__class__ and
+                self.value == other.value)
+
     # Every subclass should implement codegen.
     def codegen(self):
         raise Exception("Codegen unimplemented for {}".format(
@@ -113,6 +117,11 @@ class BinOp(AST):
     def __str__(self):
         return "({} {} {})".format(self.lhs, self.op.value, self.rhs,)
 
+    def __eq__(self, other):
+        return (self.__class__ == other.__class__ and
+                self.lhs == other.lhs and self.op == other.op and
+                self.rhs == other.rhs)
+
     # Generate the code for the left hand and right hand sides, then call the
     # operation. The stack model encodes expressions in RPN, so an expression
     # like (1 + 1) * 2 becomes (1 1 + 2 *).
@@ -144,6 +153,10 @@ class Assignment(AST):
 
     def __str__(self):
         return "{} = {}".format(self.name, self.expr)
+
+    def __eq__(self, other):
+        return (self.__class__ == other.__class__ and
+                self.name == other.name and self.expr == other.expr)
 
     def codegen(self):
         code = self.expr.codegen()
@@ -196,6 +209,11 @@ class Fn(AST):
             body='\n'.join("  {};".format(stmt) for stmt in self.body),
         )
 
+    def __eq__(self, other):
+        return (self.__class__ == other.__class__ and
+                self.name == other.name and self.args == other.args and
+                self.body == other.body)
+
     def codegen(self):
         code = []
         for i, _ in enumerate(self.args):
@@ -236,6 +254,10 @@ class Call(AST):
 
     def __str__(self):
         return "{}({})".format(self.name, ', '.join(self.args))
+
+    def __eq__(self, other):
+        return (self.__class__ == other.__class__ and
+                self.name == other.name and self.args == other.args)
 
     def codegen(self):
         code = []
@@ -282,6 +304,12 @@ class IfElse(AST):
                 '  \n'.join(str(stmt) for stmt in self.if_block),
                 '  \n'.join(str(stmt) for stmt in self.else_block)
             )
+
+    def __eq__(self, other):
+        return (self.__class__ == other.__class__ and
+                self.cond == other.cond and
+                self.if_block == other.if_block and
+                self.else_block == other.else_block)
 
     def codegen(self):
         code = self.cond.codegen()

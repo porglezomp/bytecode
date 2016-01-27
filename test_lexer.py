@@ -1,18 +1,25 @@
-from hypothesis import given
+import math
+
+import hypothesis
+from hypothesis import given, example
 from hypothesis.strategies import text, floats, integers
 
 import lexer
 from lexer import Ident, Num
 
 
-@given(text())
+@given(text(alphabet='abcdefghijklmnopqrstuvwxyz0123456789_'))
+@example('if')
 def test_identifiers(name):
+    hypothesis.assume(name)
+    hypothesis.assume(not name[0].isdigit())
     assert list(lexer.tokenize(name)) == [Ident(name)]
 
 
-@given(floats())
+@given(floats(allow_infinity=False, allow_nan=False))
 def test_floats(num):
-    assert list(lexer.tokenize(str(num))) == [Num(num)]
+    hypothesis.assume(not math.isinf(num))
+    assert list(lexer.tokenize('{:.1024f}'.format(num))) == [Num(num)]
 
 
 @given(integers())
